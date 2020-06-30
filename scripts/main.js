@@ -2,23 +2,51 @@
 import * as THREE from 'https://unpkg.com/three@0.118.3/build/three.module.js';
 import {OBJLoader} from 'https://unpkg.com/three@0.118.3/examples/jsm/loaders/OBJLoader.js';
 import {OrbitControls} from 'https://unpkg.com/three@0.118.3/examples/jsm/controls/OrbitControls.js';
+import Stats from 'https://unpkg.com/three@0.118.3/examples/jsm/libs/stats.module.js';
 
 const KEY_Z = 0.95;
 
-var renderer = new THREE.WebGLRenderer();
+var container = document.createElement('div');
+document.body.appendChild(container);
+
+var renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+container.appendChild(renderer.domElement);
+
+var stats = new Stats();
+container.appendChild(stats.dom);
+stats.showPanel(1);
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 var controls = new OrbitControls(camera, renderer.domElement);
+controls.enableKeys = false;
+controls.enablePan = false;
+controls.enableDamping = true;
+controls.maxDistance  = 30;
 var obj_loader = new OBJLoader();
 var tex_loader = new THREE.TextureLoader();
+var cub_loader = new THREE.CubeTextureLoader();
 
 var calculator = new THREE.Group();
 var keyboard = new THREE.Group();
 
 calculator.add(keyboard);
+
+var scene_map = cub_loader.load([
+    'textures/sky/3.png',
+    'textures/sky/1.png',
+    'textures/sky/2.png',
+    'textures/sky/4.png',
+    'textures/sky/5.png',
+    'textures/sky/6.png'
+]);
+
+scene.background = scene_map;
+
 
 function populate_keyboard(data, obj) {
     var init_geometry = new THREE.BufferGeometry();
@@ -26,9 +54,12 @@ function populate_keyboard(data, obj) {
     for(var i in data) {
         var key = data[i];
         
+        var texture = tex_loader.load("textures/out/button-" + key[0] + ".png");
+        texture.anisotropy = 16;
+        
         var temp_obj = new THREE.Mesh(init_geometry, new THREE.MeshStandardMaterial({
             color: 0xffffff,
-            map: tex_loader.load("textures/out/button-" + key[0] + ".png")
+            map: texture
         }));
         
         temp_obj.position.copy(key[3]);
@@ -39,6 +70,9 @@ function populate_keyboard(data, obj) {
         };
         
         temp_obj.rotation.x = 3.14159226/2;
+        
+        temp_obj.castShadow = true;
+        temp_obj.receiveShadow = false;
         
         keyboard.add(temp_obj);
     }
@@ -115,27 +149,55 @@ var calculator_button_zero = new THREE.Mesh(new THREE.BufferGeometry(), new THRE
     color: 0xffffff,
     map: tex_loader.load("textures/out/button-zero.png")
 }));
+
+calculator_body.castShadow = false;
+calculator_body.receiveShadow = true;
 calculator.add(calculator_button_zero);
 var calculator_screen = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
-    map: tex_loader.load("https://threejsfundamentals.org/threejs/resources/images/wall.jpg")
+    color: 0xFFFFFF,
+    emissive: 0x111111,
+    map: screen_texture
 }));
+
+calculator_screen.castShadow = false;
+calculator_screen.receiveShadow = true;
 calculator.add(calculator_screen);
-var calculator_screen_protection = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshPhysicalMaterial({
-	color: 0x000000,
-	metalness: 0,
+var calculator_screen_protection = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
+	transparent: true,
+	opacity: 0.1,
+	depthWrite: true,
+	
+	color: 0xFFFFFF,
+	emissive: 0x000000,
 	roughness: 0,
-	depthWrite: false,
-	transparency: 0.9, 
-	opacity: 1,
-	transparent: true
+	metalness: 0.5,
+	
+	envMap: scene_map,
+	envMapIntensity: 10.0,
 }));
+
+calculator_screen_protection.castShadow = false;
+calculator_screen_protection.receiveShadow = true;
 calculator.add(calculator_screen_protection);
 
 scene.add(calculator);
 
 // Lights
+var targetObject = new THREE.Object3D();
+targetObject.position.set(-0, -16, -0);
+scene.add(targetObject);
 var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.95 );
-directionalLight.position.set(1, 1, 1)
+directionalLight.position.set(10, 0, 10);
+directionalLight.target = targetObject;
+directionalLight.castShadow = true;
+directionalLight.shadow.camera.right    =  5;
+directionalLight.shadow.camera.left     = -5;
+directionalLight.shadow.camera.top      =  5;
+directionalLight.shadow.camera.bottom   = -5;
+directionalLight.shadow.mapSize.width = 2048;
+directionalLight.shadow.mapSize.height = 2048;
+directionalLight.shadow.bias = 0.0001;
+
 scene.add(directionalLight);
 var light = new THREE.AmbientLight(0x505050); // soft white light
 scene.add(light);
@@ -170,6 +232,8 @@ function animate() {
     controls.update();
     
     renderer.render(scene, camera);
+    
+    stats.update();
 }
 
 window.addEventListener( 'resize', onWindowResize, false );
@@ -181,3 +245,4 @@ function onWindowResize(){
 }
 
 animate();
+
