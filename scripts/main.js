@@ -5,6 +5,7 @@ import {OrbitControls} from 'https://unpkg.com/three@0.118.3/examples/jsm/contro
 import Stats from 'https://unpkg.com/three@0.118.3/examples/jsm/libs/stats.module.js';
 
 const KEY_Z = 0.95;
+const KEY_Z_PUSH = 0.85;
 
 var container = document.createElement('div');
 document.body.appendChild(container);
@@ -36,6 +37,10 @@ var keyboard = new THREE.Group();
 
 calculator.add(keyboard);
 
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
+var keyHeldDown = null;
+
 var scene_map = cub_loader.load([
     'textures/sky/3.png',
     'textures/sky/1.png',
@@ -47,6 +52,28 @@ var scene_map = cub_loader.load([
 
 scene.background = scene_map;
 
+// console.log(document.getElementById('canvas'));
+var screen_texture = new THREE.CanvasTexture(document.getElementById('canvas'));
+
+
+
+
+
+
+
+/*
+var Module;
+(function () {
+
+Module = {
+    canvas: document.getElementById('simu_screen'),
+    onDisplayRefresh: function() {}
+};
+
+Epsilon(Module);
+
+}());
+*/
 
 function populate_keyboard(data, obj) {
     var init_geometry = new THREE.BufferGeometry();
@@ -54,7 +81,7 @@ function populate_keyboard(data, obj) {
     for(var i in data) {
         var key = data[i];
         
-        var texture = tex_loader.load("textures/out/button-" + key[0] + ".png");
+        var texture = tex_loader.load("textures/omega/button-" + key[0] + ".png");
         texture.anisotropy = 16;
         
         var temp_obj = new THREE.Mesh(init_geometry, new THREE.MeshStandardMaterial({
@@ -86,7 +113,7 @@ function load_keyboard_model(keyboard, obj) {
 
 
 populate_keyboard([
-    ["cross", 3, [0, 1, 2, 3], new THREE.Vector3(0.85, -6.425, KEY_Z)],
+    ["cross", 3, "cross",      new THREE.Vector3(0.85, -6.425, KEY_Z)],
     ["ok",    2, 4,            new THREE.Vector3(5.25, -6.975, KEY_Z)],
     ["back",  2, 5,            new THREE.Vector3(6.35, -6.975, KEY_Z)],
     ["home",  1, 6,            new THREE.Vector3(3.5,  -6.575, KEY_Z)],
@@ -114,17 +141,17 @@ populate_keyboard([
     ["square", 4, 29, new THREE.Vector3(6.35, -10.55, KEY_Z)],
     
     
-    ["seven",             1, 36, new THREE.Vector3(0.85, -11.450, KEY_Z)],
-    ["eight",             1, 37, new THREE.Vector3(2.2,  -11.450, KEY_Z)],
-    ["nine",              1, 38, new THREE.Vector3(3.55, -11.450, KEY_Z)],
-    ["left-parenthesis",  1, 39, new THREE.Vector3(4.9,  -11.450, KEY_Z)],
-    ["right-parenthesis", 1, 40, new THREE.Vector3(6.25, -11.450, KEY_Z)],
+    ["seven",             1, 30, new THREE.Vector3(0.85, -11.450, KEY_Z)],
+    ["eight",             1, 31, new THREE.Vector3(2.2,  -11.450, KEY_Z)],
+    ["nine",              1, 32, new THREE.Vector3(3.55, -11.450, KEY_Z)],
+    ["left-parenthesis",  1, 33, new THREE.Vector3(4.9,  -11.450, KEY_Z)],
+    ["right-parenthesis", 1, 34, new THREE.Vector3(6.25, -11.450, KEY_Z)],
     
-    ["four",     1, 42, new THREE.Vector3(0.85, -12.450, KEY_Z)],
-    ["five",     1, 43, new THREE.Vector3(2.2,  -12.450, KEY_Z)],
-    ["six",      1, 44, new THREE.Vector3(3.55, -12.450, KEY_Z)],
-    ["multiply", 1, 45, new THREE.Vector3(4.9,  -12.450, KEY_Z)],
-    ["divide",   1, 46, new THREE.Vector3(6.25, -12.450, KEY_Z)],
+    ["four",     1, 36, new THREE.Vector3(0.85, -12.450, KEY_Z)],
+    ["five",     1, 37, new THREE.Vector3(2.2,  -12.450, KEY_Z)],
+    ["six",      1, 38, new THREE.Vector3(3.55, -12.450, KEY_Z)],
+    ["multiply", 1, 39, new THREE.Vector3(4.9,  -12.450, KEY_Z)],
+    ["divide",   1, 40, new THREE.Vector3(6.25, -12.450, KEY_Z)],
     
     ["one",   1, 42, new THREE.Vector3(0.85, -13.450, KEY_Z)],
     ["two",   1, 43, new THREE.Vector3(2.2,  -13.450, KEY_Z)],
@@ -142,17 +169,12 @@ populate_keyboard([
 // Calculator parts
 var calculator_body = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    map: tex_loader.load("textures/out/body.png")
+    map: tex_loader.load("textures/omega/body.png")
 }));
 calculator.add(calculator_body);
-var calculator_button_zero = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    map: tex_loader.load("textures/out/button-zero.png")
-}));
 
 calculator_body.castShadow = false;
 calculator_body.receiveShadow = true;
-calculator.add(calculator_button_zero);
 var calculator_screen = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
     color: 0xFFFFFF,
     emissive: 0x111111,
@@ -226,6 +248,31 @@ controls.target.set(4.1, -8, 0.5);
 camera.position.set(4.1, -8, 15.5);
 controls.update();
 
+var Module;
+(function () {
+    var mainCanvas = document.getElementById('canvas');
+    // var secondaryCanvasContext = document.getElementById('secondary-canvas').getContext('2d');
+    var epsilonLanguage = document.documentElement.lang || window.navigator.language.split('-')[0];
+    Module = {
+        canvas: mainCanvas,
+        arguments: ['--language', epsilonLanguage],
+        onDisplayRefresh: function() {
+            screen_texture.needsUpdate = true;
+            // animate();
+        },
+        doNotCaptureKeyboard: true,
+        env: {
+            "SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT": "#canvas"
+        }
+    }
+    
+    Epsilon(Module);
+    
+    console.log(Module);
+
+}());
+
+
 function animate() {
     requestAnimationFrame(animate);
     
@@ -242,6 +289,88 @@ function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+}
+/*
+document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+function onDocumentMouseMove( event ) {
+
+	event.preventDefault();
+
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+*/
+document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+function onDocumentMouseDown( event ) {
+
+	event.preventDefault();
+
+	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+	mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+	
+	camera.updateMatrixWorld();
+	raycaster.setFromCamera(mouse, camera);
+	var intersects = raycaster.intersectObjects(keyboard.children);
+	
+	if (intersects.length >= 1 && keyHeldDown == null) {
+	    keyHeldDown = intersects[0].object;
+	    
+	    console.log(intersects[0])
+	    
+	    if (keyHeldDown.userData.dataKey != "cross") {
+	        keyHeldDown.position.setZ(KEY_Z_PUSH);
+	        Module._IonSimulatorKeyboardKeyDown(keyHeldDown.userData.dataKey);
+	    } else {
+	        if (intersects[0].point.y >= -7.124) {
+	            // up
+	            keyHeldDown.rotation.x = 31 * 3.14159226/64;
+	            keyHeldDown.position.setZ(KEY_Z - 0.05);
+	            Module._IonSimulatorKeyboardKeyDown(1);
+	        } else if (intersects[0].point.y <= -7.724) {
+	            // down
+	            keyHeldDown.rotation.x = 33 * 3.14159226/64;
+	            keyHeldDown.position.setZ(KEY_Z + 0.05);
+	            Module._IonSimulatorKeyboardKeyDown(2);
+	        } else if (intersects[0].point.x >= 2.15) {
+	            // right
+	            keyHeldDown.rotation.z = -1 * 3.14159226/64;
+	            keyHeldDown.position.setZ(KEY_Z + 0.05);
+	            Module._IonSimulatorKeyboardKeyDown(3);
+	        } else if (intersects[0].point.x <= 1.55) {
+	            // left
+	            keyHeldDown.rotation.z = 1 * 3.14159226/64;
+	            keyHeldDown.position.setZ(KEY_Z - 0.05);
+	            Module._IonSimulatorKeyboardKeyDown(0);
+	        }
+	    }
+	}
+}
+
+document.addEventListener('mouseup', onDocumentMouseUp, false);
+
+function onDocumentMouseUp( event ) {
+
+	event.preventDefault();
+
+	if (keyHeldDown != null) {
+	    if (keyHeldDown.userData.dataKey != "cross") {
+	        keyHeldDown.position.setZ(KEY_Z);
+	        Module._IonSimulatorKeyboardKeyUp(keyHeldDown.userData.dataKey);
+	    } else {
+            keyHeldDown.rotation.x = 3.14159226/2;
+            keyHeldDown.rotation.y = 0;
+            keyHeldDown.rotation.z = 0;
+            keyHeldDown.position.setZ(KEY_Z);
+	        Module._IonSimulatorKeyboardKeyUp(0);
+	        Module._IonSimulatorKeyboardKeyUp(1);
+	        Module._IonSimulatorKeyboardKeyUp(2);
+	        Module._IonSimulatorKeyboardKeyUp(3);
+	    }
+	    
+	    keyHeldDown = null;
+	}
 }
 
 animate();

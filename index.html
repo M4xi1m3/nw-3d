@@ -6,10 +6,16 @@
 		<style>
 			body { margin: 0; }
 			canvas { display: block; }
+			#canvas {display: none;}
 		</style>
 	</head>
 	<body>
+	    <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+	    
 	    <script src="simulator/epsilon.js"></script>
+	    
 		<script type="module" src="scripts/main.js"></script>
+		
+		
 	</body>
 </html>
