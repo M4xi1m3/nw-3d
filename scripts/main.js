@@ -302,10 +302,16 @@ function onDocumentMouseMove( event ) {
 }
 */
 document.addEventListener('mousedown', onDocumentMouseDown, false);
+document.addEventListener('touchstart', onDocumentMouseDown, false);
 
 function onDocumentMouseDown( event ) {
 
 	event.preventDefault();
+
+    if ("touches" in event) {
+        event.clientX = event.touches[0].clientX;
+        event.clientY = event.touches[0].clientY;
+    }
 
 	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 	mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
@@ -349,6 +355,7 @@ function onDocumentMouseDown( event ) {
 }
 
 document.addEventListener('mouseup', onDocumentMouseUp, false);
+document.addEventListener('touchend', onDocumentMouseUp, false);
 
 function onDocumentMouseUp( event ) {
 
