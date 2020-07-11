@@ -117,7 +117,7 @@ populate_keyboard([
     ["ok",    2, 4,            new THREE.Vector3(5.25, -6.975, KEY_Z)],
     ["back",  2, 5,            new THREE.Vector3(6.35, -6.975, KEY_Z)],
     ["home",  1, 6,            new THREE.Vector3(3.5,  -6.575, KEY_Z)],
-    ["power", 1, 7,            new THREE.Vector3(3.5,  -7.575, KEY_Z)],
+    ["power", 1, "power",      new THREE.Vector3(3.5,  -7.575, KEY_Z)],
     
     ["shift",     4, 12, new THREE.Vector3(0.85, -8.75, KEY_Z)],
     ["alpha",     4, 13, new THREE.Vector3(1.95, -8.75, KEY_Z)],
@@ -176,9 +176,9 @@ calculator.add(calculator_body);
 calculator_body.castShadow = false;
 calculator_body.receiveShadow = true;
 var calculator_screen = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
-    color: 0xFFFFFF,
-    emissive: 0x111111,
-    map: screen_texture
+    color: 0x000000,
+    emissive: new THREE.Color(1, 1, 1),
+    emissiveMap: screen_texture
 }));
 
 calculator_screen.castShadow = false;
@@ -186,7 +186,7 @@ calculator_screen.receiveShadow = true;
 calculator.add(calculator_screen);
 var calculator_screen_protection = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
 	transparent: true,
-	opacity: 0.1,
+	opacity: 0.15,
 	depthWrite: true,
 	
 	color: 0xFFFFFF,
@@ -267,9 +267,6 @@ var Module;
     }
     
     Epsilon(Module);
-    
-    console.log(Module);
-
 }());
 
 
@@ -306,52 +303,62 @@ document.addEventListener('touchstart', onDocumentMouseDown, false);
 
 function onDocumentMouseDown( event ) {
 
-	event.preventDefault();
+event.preventDefault();
 
     if ("touches" in event) {
         event.clientX = event.touches[0].clientX;
         event.clientY = event.touches[0].clientY;
     }
 
-	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-	mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-	
-	camera.updateMatrixWorld();
-	raycaster.setFromCamera(mouse, camera);
-	var intersects = raycaster.intersectObjects(keyboard.children);
-	
-	if (intersects.length >= 1 && keyHeldDown == null) {
-	    keyHeldDown = intersects[0].object;
-	    
-	    console.log(intersects[0])
-	    
-	    if (keyHeldDown.userData.dataKey != "cross") {
-	        keyHeldDown.position.setZ(KEY_Z_PUSH);
-	        Module._IonSimulatorKeyboardKeyDown(keyHeldDown.userData.dataKey);
-	    } else {
-	        if (intersects[0].point.y >= -7.124) {
-	            // up
-	            keyHeldDown.rotation.x = 31 * 3.14159226/64;
-	            keyHeldDown.position.setZ(KEY_Z - 0.05);
-	            Module._IonSimulatorKeyboardKeyDown(1);
-	        } else if (intersects[0].point.y <= -7.724) {
-	            // down
-	            keyHeldDown.rotation.x = 33 * 3.14159226/64;
-	            keyHeldDown.position.setZ(KEY_Z + 0.05);
-	            Module._IonSimulatorKeyboardKeyDown(2);
-	        } else if (intersects[0].point.x >= 2.15) {
-	            // right
-	            keyHeldDown.rotation.z = -1 * 3.14159226/64;
-	            keyHeldDown.position.setZ(KEY_Z + 0.05);
-	            Module._IonSimulatorKeyboardKeyDown(3);
-	        } else if (intersects[0].point.x <= 1.55) {
-	            // left
-	            keyHeldDown.rotation.z = 1 * 3.14159226/64;
-	            keyHeldDown.position.setZ(KEY_Z - 0.05);
-	            Module._IonSimulatorKeyboardKeyDown(0);
-	        }
-	    }
-	}
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    camera.updateMatrixWorld();
+    raycaster.setFromCamera(mouse, camera);
+    var intersects = raycaster.intersectObjects(keyboard.children);
+
+    if (intersects.length >= 1 && keyHeldDown == null) {
+        keyHeldDown = intersects[0].object;
+
+        if (keyHeldDown.userData.dataKey != "cross") {
+
+            if (keyHeldDown.userData.dataKey != "power") {
+                Module._IonSimulatorKeyboardKeyUp(keyHeldDown.userData.dataKey);
+            } else {
+                if (calculator_screen.material.emissive.r == 0) {
+                    calculator_screen.material.emissive = new THREE.Color(1, 1, 1);
+                } else {
+                    calculator_screen.material.emissive = new THREE.Color(0, 0, 0);
+                }
+                console.log(calculator_screen);
+            }
+            
+            keyHeldDown.position.setZ(KEY_Z_PUSH);
+            Module._IonSimulatorKeyboardKeyDown(keyHeldDown.userData.dataKey);
+        } else {
+            if (intersects[0].point.y >= -7.124) {
+                // up
+                keyHeldDown.rotation.x = 31 * 3.14159226/64;
+                keyHeldDown.position.setZ(KEY_Z - 0.05);
+                Module._IonSimulatorKeyboardKeyDown(1);
+            } else if (intersects[0].point.y <= -7.724) {
+                // down
+                keyHeldDown.rotation.x = 33 * 3.14159226/64;
+                keyHeldDown.position.setZ(KEY_Z + 0.05);
+                Module._IonSimulatorKeyboardKeyDown(2);
+            } else if (intersects[0].point.x >= 2.15) {
+                // right
+                keyHeldDown.rotation.z = -1 * 3.14159226/64;
+                keyHeldDown.position.setZ(KEY_Z + 0.05);
+                Module._IonSimulatorKeyboardKeyDown(3);
+            } else if (intersects[0].point.x <= 1.55) {
+                // left
+                keyHeldDown.rotation.z = 1 * 3.14159226/64;
+                keyHeldDown.position.setZ(KEY_Z - 0.05);
+                Module._IonSimulatorKeyboardKeyDown(0);
+            }
+        }
+    }
 }
 
 document.addEventListener('mouseup', onDocumentMouseUp, false);
@@ -359,25 +366,27 @@ document.addEventListener('touchend', onDocumentMouseUp, false);
 
 function onDocumentMouseUp( event ) {
 
-	event.preventDefault();
+    event.preventDefault();
 
-	if (keyHeldDown != null) {
-	    if (keyHeldDown.userData.dataKey != "cross") {
-	        keyHeldDown.position.setZ(KEY_Z);
-	        Module._IonSimulatorKeyboardKeyUp(keyHeldDown.userData.dataKey);
-	    } else {
+    if (keyHeldDown != null) {
+        if (keyHeldDown.userData.dataKey != "cross") {
+        keyHeldDown.position.setZ(KEY_Z);
+            if (keyHeldDown.userData.dataKey != "power") {
+                Module._IonSimulatorKeyboardKeyUp(keyHeldDown.userData.dataKey);
+            }
+        } else {
             keyHeldDown.rotation.x = 3.14159226/2;
             keyHeldDown.rotation.y = 0;
             keyHeldDown.rotation.z = 0;
             keyHeldDown.position.setZ(KEY_Z);
-	        Module._IonSimulatorKeyboardKeyUp(0);
-	        Module._IonSimulatorKeyboardKeyUp(1);
-	        Module._IonSimulatorKeyboardKeyUp(2);
-	        Module._IonSimulatorKeyboardKeyUp(3);
-	    }
-	    
-	    keyHeldDown = null;
-	}
+            Module._IonSimulatorKeyboardKeyUp(0);
+            Module._IonSimulatorKeyboardKeyUp(1);
+            Module._IonSimulatorKeyboardKeyUp(2);
+            Module._IonSimulatorKeyboardKeyUp(3);
+        }
+
+        keyHeldDown = null;
+    }
 }
 
 animate();
