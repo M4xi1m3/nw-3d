@@ -1,5 +1,5 @@
 # nw-3d
-Nmuworks simulator, now in 3D.
+Numworks simulator, now in 3D.
 
 ## Licensing
 
