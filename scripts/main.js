@@ -54,26 +54,8 @@ scene.background = scene_map;
 
 // console.log(document.getElementById('canvas'));
 var screen_texture = new THREE.CanvasTexture(document.getElementById('canvas'));
-
-
-
-
-
-
-
-/*
-var Module;
-(function () {
-
-Module = {
-    canvas: document.getElementById('simu_screen'),
-    onDisplayRefresh: function() {}
-};
-
-Epsilon(Module);
-
-}());
-*/
+screen_texture.minFilter = THREE.LinearFilter;
+screen_texture.magFilter = THREE.LinearFilter;
 
 function populate_keyboard(data, obj) {
     var init_geometry = new THREE.BufferGeometry();
@@ -82,7 +64,10 @@ function populate_keyboard(data, obj) {
         var key = data[i];
         
         var texture = tex_loader.load("textures/omega/button-" + key[0] + ".png");
-        texture.anisotropy = 16;
+        
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        // texture.anisotropy = 16;
         
         var temp_obj = new THREE.Mesh(init_geometry, new THREE.MeshStandardMaterial({
             color: 0xffffff,
@@ -167,9 +152,13 @@ populate_keyboard([
 ], keyboard);
 
 // Calculator parts
+var body_texture = tex_loader.load("textures/omega/body.png");
+body_texture.minFilter = THREE.LinearFilter;
+body_texture.magFilter = THREE.LinearFilter;
+
 var calculator_body = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    map: tex_loader.load("textures/omega/body.png")
+    map: body_texture
 }));
 calculator.add(calculator_body);
 
