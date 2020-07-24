@@ -1,3 +1,5 @@
+![a omega-numworks-branded-calculator in 3D in space](./screenshot.png)
+
 # nw-3d
 Numworks simulator, now in 3D.
 
